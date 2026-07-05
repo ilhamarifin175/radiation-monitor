@@ -1,5 +1,11 @@
+[phases.setup]
+aptPkgs = ["php8.3-mysql", "php8.3-mbstring", "php8.3-xml", "php8.3-bcmath", "php8.3-curl"]
+
 [phases.install]
 cmds = [
   "composer update nette/schema nette/utils league/config --no-scripts --no-interaction",
   "composer install --optimize-autoloader --no-scripts --no-interaction"
 ]
+
+[start]
+cmd = "php artisan migrate --force && apache2-foreground"
