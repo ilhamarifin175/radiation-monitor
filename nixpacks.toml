@@ -1,5 +1,5 @@
-[phases.setup]
-aptPkgs = ["php8.3-mysql", "php8.3-mbstring", "php8.3-xml", "php8.3-bcmath", "php8.3-curl"]
+[variables]
+NIXPACKS_PHP_EXTENSIONS = "pdo_mysql,mbstring,xml,bcmath,curl,tokenizer,openssl,fileinfo"
 
 [phases.install]
 cmds = [
