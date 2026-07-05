@@ -1,5 +1,6 @@
 [variables]
 NIXPACKS_PHP_EXTENSIONS = "pdo_mysql,mbstring,xml,bcmath,curl,tokenizer,openssl,fileinfo"
+NIXPACKS_PHP_ROOT_DIR   = "public"
 
 [phases.install]
 cmds = [
