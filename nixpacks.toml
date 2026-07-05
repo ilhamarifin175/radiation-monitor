@@ -1,0 +1,5 @@
+[phases.install]
+cmds = [
+  "composer update nette/schema nette/utils league/config --no-scripts --no-interaction",
+  "composer install --optimize-autoloader --no-scripts --no-interaction"
+]
