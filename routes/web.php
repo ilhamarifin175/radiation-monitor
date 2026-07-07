@@ -12,7 +12,10 @@ Route::get('/outdoor-monitor',          [OutdoorMonitoringController::class, 'in
 Route::get('/indoor-monitor',           [IndoorMonitoringController::class,  'index']);
 Route::get('/outdoor-monitor-data-tables', [OutdoorMonitoringController::class, 'tables']);
 Route::get('/indoor-monitor-data-tables',  [IndoorMonitoringController::class,  'tables']);
-Route::get('/integrity-data-tables',    [IntegrityStatsController::class,    'tables']);
+Route::get('/integrity-data-tables',       [IntegrityStatsController::class,    'tables']);
+Route::get('/outdoor-monitor-export',      [OutdoorMonitoringController::class, 'exportCsv']);
+Route::get('/indoor-monitor-export',       [IndoorMonitoringController::class,  'exportCsv']);
+Route::get('/integrity-export',            [IntegrityStatsController::class,    'exportCsv']);
 
 // ===== Data (AJAX) =====
 Route::middleware('verifyApiKey')->group(function () {

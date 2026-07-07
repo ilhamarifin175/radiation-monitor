@@ -9,8 +9,11 @@
     </div>
 
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-info">Log Kualitas Jaringan</h6>
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-info">Log Kualitas Jaringan <small class="text-muted font-weight-normal">(1000 data terbaru)</small></h6>
+            <a href="{{ url('/integrity-export') }}" class="btn btn-sm btn-outline-info">
+                <i class="fas fa-download mr-1"></i> Export Semua Data
+            </a>
         </div>
         <div class="card-body">
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0" style="display:none">
@@ -23,6 +26,10 @@
                             <th>LoRa Diterima (paket)</th>
                             <th>LoRa Hilang (paket)</th>
                             <th>PDR LoRa (%)</th>
+                            <th>ESP Reset</th>
+                            <th>Backfill Luar</th>
+                            <th>Backfill Dalam</th>
+                            <th>Backfill Stats</th>
                         </tr>
                     </thead>
                     <tfoot>
@@ -34,6 +41,10 @@
                             <th>LoRa Diterima</th>
                             <th>LoRa Hilang</th>
                             <th>PDR LoRa</th>
+                            <th>ESP Reset</th>
+                            <th>Backfill Luar</th>
+                            <th>Backfill Dalam</th>
+                            <th>Backfill Stats</th>
                         </tr>
                     </tfoot>
                     <tbody>
@@ -46,6 +57,10 @@
                                 <td>{{ $item->lora_terima }}</td>
                                 <td>{{ $item->lora_hilang }}</td>
                                 <td>{{ number_format($item->lora_pdr, 2) }}</td>
+                                <td>{{ $item->esp_reset_count }}</td>
+                                <td>{{ $item->backfill_luar }}</td>
+                                <td>{{ $item->backfill_dalam }}</td>
+                                <td>{{ $item->backfill_stats }}</td>
                             </tr>
                         @endforeach
                     </tbody>

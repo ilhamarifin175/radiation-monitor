@@ -54,7 +54,7 @@ function setDashboardSeries(outdoorData, indoorData) {
 
     function toSeries(arr) {
         return arr.map(function (d) {
-            return [new Date(d.timestamp).getTime(), parseFloat(d.usvh)];
+            return [new Date(d.created_at).getTime(), parseFloat(d.usvh)];
         });
     }
 

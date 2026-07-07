@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property float $usvh
  * @property float $suhu
  * @property float $kelembapan
+ * @property \Carbon\Carbon|null $measured_at
+ * @property int|null $latency_ms
+ * @property int $is_backfill
  * @property \Carbon\Carbon $created_at
  */
 class MonitorLuar extends Model
@@ -23,20 +26,22 @@ class MonitorLuar extends Model
     public $timestamps = false;
 
     protected $casts = [
-        'timestamp'  => 'datetime',
-        'created_at' => 'datetime',
+        'measured_at' => 'datetime:Y-m-d H:i:s',
+        'created_at'  => 'datetime:Y-m-d H:i:s',
     ];
 
     public function scopeLatestFirst($query)
     {
-        return $query->orderByDesc('timestamp');
+        return $query->orderByDesc('created_at');
     }
 
     protected $fillable = [
-        'timestamp',
+        'measured_at',
         'cps',
         'usvh',
         'suhu',
         'kelembapan',
+        'latency_ms',
+        'is_backfill',
     ];
 }

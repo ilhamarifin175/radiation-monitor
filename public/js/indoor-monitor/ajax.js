@@ -80,11 +80,11 @@ $(document).ready(function () {
             headers: { 'Api-Key': apiKey },
             method: 'GET',
             success: function (latest) {
-                if (!latest || !latest.timestamp) return;
+                if (!latest || !latest.created_at) return;
 
-                var newTs  = new Date(latest.timestamp).getTime();
+                var newTs  = new Date(latest.created_at).getTime();
                 var lastTs = allData.length > 0
-                    ? new Date(allData[allData.length - 1].timestamp).getTime()
+                    ? new Date(allData[allData.length - 1].created_at).getTime()
                     : 0;
 
                 if (newTs > lastTs) {
@@ -92,7 +92,7 @@ $(document).ready(function () {
 
                     var prevLen = allData.length;
                     var cutoff  = newTs - MAX_HISTORY_MS;
-                    while (allData.length > 0 && new Date(allData[0].timestamp).getTime() < cutoff) {
+                    while (allData.length > 0 && new Date(allData[0].created_at).getTime() < cutoff) {
                         allData.shift();
                     }
 

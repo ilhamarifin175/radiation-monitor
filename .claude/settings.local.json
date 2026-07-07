@@ -3,7 +3,8 @@
     "allow": [
       "Read(//d/TA/Code/Monitor Radiasi Luar_Percobaan/src/**)",
       "Read(//d/TA/Code/Monitor Radiasi Dalam_Percobaan/src/**)",
-      "Read(//c/laragon/etc/apache2/sites-enabled/**)"
+      "Read(//c/laragon/etc/apache2/sites-enabled/**)",
+      "Bash(php artisan *)"
     ],
     "additionalDirectories": [
       "D:\\TA\\Code\\Monitor Radiasi Luar_Percobaan\\src"

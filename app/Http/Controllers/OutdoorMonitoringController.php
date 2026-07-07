@@ -37,11 +37,13 @@ class OutdoorMonitoringController extends Controller
 
         foreach ($rows as $row) {
             $data = new MonitorLuar();
-            $data->timestamp  = $row['timestamp'];
-            $data->cps        = $row['cps'];
-            $data->usvh       = $row['usvh'];
-            $data->suhu       = $row['suhu'];
-            $data->kelembapan = $row['kelembapan'];
+            $data->measured_at = $row['measured_at'] ?? null;
+            $data->cps         = $row['cps'];
+            $data->usvh        = $row['usvh'];
+            $data->suhu        = $row['suhu'];
+            $data->kelembapan  = $row['kelembapan'];
+            $data->latency_ms  = $row['latency_ms'] ?? 0;
+            $data->is_backfill = $row['is_backfill'] ?? 0;
             $data->save();
         }
 
@@ -53,37 +55,78 @@ class OutdoorMonitoringController extends Controller
         return response()->json($data);
     }
 
+    public function exportCsv(Request $request)
+    {
+        $from = $request->query('from');
+        $to   = $request->query('to');
+
+        $query = MonitorLuar::orderBy('created_at', 'asc');
+
+        if ($from && $to) {
+            $query->where('created_at', '>=', Carbon::parse($from))
+                  ->where('created_at', '<=', Carbon::parse($to));
+        }
+
+        $data     = $query->get();
+        $filename = 'monitor_luar_' . now()->format('Y-m-d_His') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($data) {
+            $f = fopen('php://output', 'w');
+            fputs($f, "\xEF\xBB\xBF");
+            fputcsv($f, [
+                'Waktu Dibuat', 'Waktu Diukur', 'CPS',
+                'Laju Dosis (uSv/jam)', 'Suhu (C)', 'Kelembapan (%)',
+                'Latency (ms)', 'Is Backfill',
+            ]);
+            foreach ($data as $row) {
+                fputcsv($f, [
+                    $row->created_at, $row->measured_at, $row->cps,
+                    $row->usvh,       $row->suhu,        $row->kelembapan,
+                    $row->latency_ms, $row->is_backfill,
+                ]);
+            }
+            fclose($f);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function getLatestData(?Request $request = null) {
         $after = $request?->query('after');
 
         if ($after) {
-            $rows = MonitorLuar::where('timestamp', '>', $after)
-                        ->where('timestamp', '>=', now()->subMinute())
-                        ->orderBy('timestamp', 'asc')
+            $rows = MonitorLuar::where('is_backfill', 0)
+                        ->where('created_at', '>', Carbon::parse($after))
+                        ->orderBy('created_at', 'asc')
                         ->get();
             return response()->json($rows);
         }
 
         return response()->json(
-            MonitorLuar::latestFirst()->where('timestamp', '>=', now()->subMinute())->first()
+            MonitorLuar::where('is_backfill', 0)->latestFirst()->first()
         );
     }
 
     public function getTablesData() {
-        return MonitorLuar::latestFirst()->get();
+        return MonitorLuar::latestFirst()->take(1000)->get();
     }
 
     public function getDataHistory(Request $request) {
         $from = $request->query('from');
         $to   = $request->query('to');
 
-        $query = MonitorLuar::orderBy('timestamp', 'asc');
+        $query = MonitorLuar::where('is_backfill', 0)->orderBy('created_at', 'asc');
 
         if ($from && $to) {
-            $query->where('timestamp', '>=', $from)
-                  ->where('timestamp', '<=', $to);
+            $query->where('created_at', '>=', Carbon::parse($from))
+                  ->where('created_at', '<=', Carbon::parse($to));
         } else {
-            $query->where('timestamp', '>=', Carbon::now()->subHour());
+            $query->where('created_at', '>=', Carbon::now()->subHour());
         }
 
         return response()->json($query->get());

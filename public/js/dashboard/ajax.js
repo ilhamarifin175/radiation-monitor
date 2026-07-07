@@ -7,8 +7,6 @@ $(document).ready(function () {
     var allOutdoorData      = [];
     var allIndoorData       = [];
     var lastReceivedTs      = 0;
-    var outdoorBuffer       = [];
-    var indoorBuffer        = [];
     var lastOutdoorServerTs = '';
     var lastIndoorServerTs  = '';
 
@@ -133,81 +131,66 @@ $(document).ready(function () {
         $('#last-data-relative').html(rel);
     }
 
-    /* ── Poll server tiap 10 detik — ambil semua baris baru ─── */
+    /* ── Bantu trim data lama dari array ───────────────────────── */
+    function trimOldData(arr, latestTs) {
+        var cutoff = latestTs - MAX_HISTORY_MS;
+        while (arr.length > 0 && new Date(arr[0].created_at).getTime() < cutoff) {
+            arr.shift();
+        }
+    }
+
+    /* ── Poll server tiap 2 detik — ambil 1 record terbaru ────── */
     function pollLatest() {
-        if (!lastOutdoorServerTs) return;
         $.ajax({
             url: 'latest-outdoor-cps',
             headers: { 'Api-Key': apiKey },
-            data: { after: lastOutdoorServerTs },
             method: 'GET',
-            success: function (rows) {
-                if (!Array.isArray(rows) || rows.length === 0) return;
-                // Cursor maju dari SEMUA baris (termasuk backfill) agar tidak terjebak
-                lastOutdoorServerTs = rows[rows.length - 1].timestamp;
-                // Hanya masukkan ke buffer baris yang segar (< 5 menit lalu)
-                var cutoff = new Date(Date.now() - 5 * 60 * 1000);
-                rows.filter(function(r) { return new Date(r.timestamp) >= cutoff; })
-                    .forEach(function(r) { outdoorBuffer.push(r); });
+            cache: false,
+            success: function (latest) {
+                if (!latest || Array.isArray(latest) || !latest.created_at) return;
+                if (latest.is_backfill != 0) return;
+                var ts    = new Date(latest.created_at).getTime();
+                var prevTs = allOutdoorData.length > 0
+                    ? new Date(allOutdoorData[allOutdoorData.length - 1].created_at).getTime()
+                    : 0;
+                if (ts <= prevTs) return;
+                allOutdoorData.push(latest);
+                trimOldData(allOutdoorData, ts);
+                updateCards(latest, null);
+                updateLastDataTime(latest.created_at);
+                var inLatest = allIndoorData.length > 0 ? allIndoorData[allIndoorData.length - 1] : null;
+                checkToast(latest, inLatest);
+                setDashboardSeries(allOutdoorData, allIndoorData);
+                updateHighestCard(allOutdoorData, allIndoorData);
             },
-            error: function (xhr) { console.log('outdoor poll error:', xhr.responseText); }
+            error: function (xhr) { console.warn('outdoor poll error:', xhr.status); }
         });
 
-        if (!lastIndoorServerTs) return;
         $.ajax({
             url: 'latest-indoor-cps',
             headers: { 'Api-Key': apiKey },
-            data: { after: lastIndoorServerTs },
             method: 'GET',
-            success: function (rows) {
-                if (!Array.isArray(rows) || rows.length === 0) return;
-                lastIndoorServerTs = rows[rows.length - 1].timestamp;
-                var cutoff = new Date(Date.now() - 5 * 60 * 1000);
-                rows.filter(function(r) { return new Date(r.timestamp) >= cutoff; })
-                    .forEach(function(r) { indoorBuffer.push(r); });
+            cache: false,
+            success: function (latest) {
+                if (!latest || Array.isArray(latest) || !latest.created_at) return;
+                if (latest.is_backfill != 0) return;
+                var ts    = new Date(latest.created_at).getTime();
+                var prevTs = allIndoorData.length > 0
+                    ? new Date(allIndoorData[allIndoorData.length - 1].created_at).getTime()
+                    : 0;
+                if (ts <= prevTs) return;
+                allIndoorData.push(latest);
+                trimOldData(allIndoorData, ts);
+                updateCards(null, latest);
+                updateRelayStatus(latest.relay);
+                updateLastDataTime(latest.created_at);
+                var outLatest = allOutdoorData.length > 0 ? allOutdoorData[allOutdoorData.length - 1] : null;
+                checkToast(outLatest, latest);
+                setDashboardSeries(allOutdoorData, allIndoorData);
+                updateHighestCard(allOutdoorData, allIndoorData);
             },
-            error: function (xhr) { console.log('indoor poll error:', xhr.responseText); }
+            error: function (xhr) { console.warn('indoor poll error:', xhr.status); }
         });
-    }
-
-    /* ── Drain buffer tiap 1 detik — tampilkan 1 baris ke grafik */
-    function drainBuffer() {
-        var outdoorItem = outdoorBuffer.length > 0 ? outdoorBuffer.shift() : null;
-        var indoorItem  = indoorBuffer.length  > 0 ? indoorBuffer.shift()  : null;
-        var changed = false;
-
-        if (outdoorItem) {
-            allOutdoorData.push(outdoorItem);
-            var outTs = new Date(outdoorItem.timestamp).getTime();
-            while (allOutdoorData.length > 0 &&
-                   new Date(allOutdoorData[0].timestamp).getTime() < outTs - MAX_HISTORY_MS) {
-                allOutdoorData.shift();
-            }
-            updateCards(outdoorItem, null);
-            updateLastDataTime(outdoorItem.timestamp);
-            changed = true;
-        }
-
-        if (indoorItem) {
-            allIndoorData.push(indoorItem);
-            var inTs = new Date(indoorItem.timestamp).getTime();
-            while (allIndoorData.length > 0 &&
-                   new Date(allIndoorData[0].timestamp).getTime() < inTs - MAX_HISTORY_MS) {
-                allIndoorData.shift();
-            }
-            updateCards(null, indoorItem);
-            updateRelayStatus(indoorItem.relay);
-            updateLastDataTime(indoorItem.timestamp);
-            changed = true;
-        }
-
-        if (changed) {
-            var outdoorLatest = allOutdoorData.length > 0 ? allOutdoorData[allOutdoorData.length - 1] : null;
-            var indoorLatest  = allIndoorData.length  > 0 ? allIndoorData[allIndoorData.length  - 1] : null;
-            checkToast(outdoorLatest, indoorLatest);
-            setDashboardSeries(allOutdoorData, allIndoorData);
-            updateHighestCard(allOutdoorData, allIndoorData);
-        }
     }
 
     /* ── Load 1 jam terakhir saat init ─────────────────────── */
@@ -230,16 +213,20 @@ $(document).ready(function () {
             updateCards(outdoorLatest, indoorLatest);
             updateHighestCard(allOutdoorData, allIndoorData);
             if (indoorLatest) updateRelayStatus(indoorLatest.relay);
-            if (indoorLatest) updateLastDataTime(indoorLatest.timestamp);
-            else if (outdoorLatest) updateLastDataTime(outdoorLatest.timestamp);
+            if (indoorLatest) updateLastDataTime(indoorLatest.created_at);
+            else if (outdoorLatest) updateLastDataTime(outdoorLatest.created_at);
             setDashboardSeries(allOutdoorData, allIndoorData);
             setDashboardAnnotations();
 
-            // Selalu mulai polling dari SEKARANG, bukan dari timestamp data terakhir.
-            // Jika lastTs diambil dari DB dan kebetulan isinya data backfill (jam lama),
-            // poll berikutnya akan mengembalikan semua baris backfill dan membanjiri chart.
-            lastOutdoorServerTs = toDatetimeStr(new Date());
-            lastIndoorServerTs  = toDatetimeStr(new Date());
+            var fallback = toDatetimeStr(new Date(Date.now() - 15000)); // 15 detik lalu
+
+            lastOutdoorServerTs = tempOutdoor.length > 0
+                ? tempOutdoor[tempOutdoor.length - 1].created_at
+                : fallback;
+
+            lastIndoorServerTs = tempIndoor.length > 0
+                ? tempIndoor[tempIndoor.length - 1].created_at
+                : fallback;
         }
 
         $.ajax({
@@ -248,7 +235,9 @@ $(document).ready(function () {
             data: params,
             method: 'GET',
             success: function (data) {
-                tempOutdoor = Array.isArray(data) ? data : [];
+                tempOutdoor = Array.isArray(data)
+                    ? data.filter(function (r) { return r.is_backfill == 0; })
+                    : [];
                 outdoorDone = true;
                 checkBothDone();
             },
@@ -261,7 +250,9 @@ $(document).ready(function () {
             data: params,
             method: 'GET',
             success: function (data) {
-                tempIndoor = Array.isArray(data) ? data : [];
+                tempIndoor = Array.isArray(data)
+                    ? data.filter(function (r) { return r.is_backfill == 0; })
+                    : [];
                 indoorDone = true;
                 checkBothDone();
             },
@@ -272,7 +263,6 @@ $(document).ready(function () {
     /* ── Init ──────────────────────────────────────────────── */
     initDashboardChart();
     loadInitial();
-    setInterval(pollLatest,        10000);
-    setInterval(drainBuffer,        1000);
+    setInterval(pollLatest,          2000);
     setInterval(refreshRelativeTime, 1000);
 });

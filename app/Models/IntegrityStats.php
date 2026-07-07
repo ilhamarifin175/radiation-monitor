@@ -31,5 +31,9 @@ class IntegrityStats extends Model
         'lora_terima',
         'lora_hilang',
         'lora_pdr',
+        'esp_reset_count',
+        'backfill_luar',
+        'backfill_dalam',
+        'backfill_stats',
     ];
 }

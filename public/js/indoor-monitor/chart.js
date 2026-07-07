@@ -65,7 +65,7 @@ function initIndoorCharts() {
 function setIndoorSeries(allData) {
     function toSeries(field) {
         return allData.map(function (d) {
-            return [new Date(d.timestamp).getTime(), parseFloat(d[field])];
+            return [new Date(d.created_at).getTime(), parseFloat(d[field])];
         });
     }
 
@@ -100,8 +100,8 @@ function setIndoorXRange(rangeKey, data) {
             }, false, false);
         });
     } else if (data && data.length > 0) {
-        var minTs = new Date(data[0].timestamp).getTime();
-        var maxTs = new Date(data[data.length - 1].timestamp).getTime();
+        var minTs = new Date(data[0].created_at).getTime();
+        var maxTs = new Date(data[data.length - 1].created_at).getTime();
         charts.forEach(function (c) {
             if (!c) return;
             c.updateOptions({
@@ -134,7 +134,7 @@ function setIndoorAnnotations(data) {
         data.forEach(function (d) {
             if (d.relay === 'OFF') {
                 relayPoints.push({
-                    x: new Date(d.timestamp).getTime(),
+                    x: new Date(d.created_at).getTime(),
                     y: parseFloat(d.usvh),
                     marker: {
                         size: 6,
@@ -178,7 +178,7 @@ function setIndoorAnnotations(data) {
 }
 
 function appendIndoorPoint(d) {
-    var ts = new Date(d.timestamp).getTime();
+    var ts = new Date(d.created_at).getTime();
 
     function ap(chart, field) {
         if (chart) chart.appendData([{ data: [[ts, parseFloat(d[field])]] }]);
