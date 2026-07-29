@@ -45,14 +45,16 @@ class IntegrityStatsController extends Controller
                 'Waktu Dibuat', 'Timestamp ESP',
                 'WiFi Terima', 'WiFi Hilang', 'WiFi PDR (%)',
                 'LoRa Terima', 'LoRa Hilang', 'LoRa PDR (%)',
-                'ESP Reset', 'Backfill Luar', 'Backfill Dalam', 'Backfill Stats',
+                'ESP Reset Luar', 'ESP Reset Dalam',
+                'Backfill Luar', 'Backfill Dalam', 'Backfill Stats',
             ]);
             foreach ($data as $row) {
                 fputcsv($f, [
-                    $row->created_at,     $row->timestamp,
-                    $row->wifi_terima,    $row->wifi_hilang,  $row->wifi_pdr,
-                    $row->lora_terima,    $row->lora_hilang,  $row->lora_pdr,
-                    $row->esp_reset_count,$row->backfill_luar,$row->backfill_dalam,$row->backfill_stats,
+                    $row->created_at,          $row->timestamp,
+                    $row->wifi_terima,         $row->wifi_hilang,         $row->wifi_pdr,
+                    $row->lora_terima,         $row->lora_hilang,         $row->lora_pdr,
+                    $row->esp_reset_count_luar,$row->esp_reset_count_dalam,
+                    $row->backfill_luar,       $row->backfill_dalam,      $row->backfill_stats,
                 ]);
             }
             fclose($f);
@@ -71,7 +73,8 @@ class IntegrityStatsController extends Controller
         $data->lora_terima      = $request->input('lora_terima');
         $data->lora_hilang      = $request->input('lora_hilang');
         $data->lora_pdr         = $request->input('lora_pdr');
-        $data->esp_reset_count  = $request->input('esp_reset_count', 0);
+        $data->esp_reset_count_luar  = $request->input('esp_reset_count_luar', 0);
+        $data->esp_reset_count_dalam = $request->input('esp_reset_count_dalam', 0);
         $data->backfill_luar    = $request->input('backfill_luar', 0);
         $data->backfill_dalam   = $request->input('backfill_dalam', 0);
         $data->backfill_stats   = $request->input('backfill_stats', 0);

@@ -7,7 +7,8 @@
       "Bash(php artisan *)"
     ],
     "additionalDirectories": [
-      "D:\\TA\\Code\\Monitor Radiasi Luar_Percobaan\\src"
+      "D:\\TA\\Code\\Monitor Radiasi Luar_Percobaan\\src",
+      "D:\\TA\\Code\\Monitor Radiasi Dalam_Percobaan\\src"
     ]
   }
 }

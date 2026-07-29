@@ -26,7 +26,8 @@
                             <th>LoRa Diterima (paket)</th>
                             <th>LoRa Hilang (paket)</th>
                             <th>PDR LoRa (%)</th>
-                            <th>ESP Reset</th>
+                            <th>ESP Reset Luar</th>
+                            <th>ESP Reset Dalam</th>
                             <th>Backfill Luar</th>
                             <th>Backfill Dalam</th>
                             <th>Backfill Stats</th>
@@ -41,7 +42,8 @@
                             <th>LoRa Diterima</th>
                             <th>LoRa Hilang</th>
                             <th>PDR LoRa</th>
-                            <th>ESP Reset</th>
+                            <th>ESP Reset Luar</th>
+                            <th>ESP Reset Dalam</th>
                             <th>Backfill Luar</th>
                             <th>Backfill Dalam</th>
                             <th>Backfill Stats</th>
@@ -57,7 +59,8 @@
                                 <td>{{ $item->lora_terima }}</td>
                                 <td>{{ $item->lora_hilang }}</td>
                                 <td>{{ number_format($item->lora_pdr, 2) }}</td>
-                                <td>{{ $item->esp_reset_count }}</td>
+                                <td>{{ $item->esp_reset_count_luar }}</td>
+                                <td>{{ $item->esp_reset_count_dalam }}</td>
                                 <td>{{ $item->backfill_luar }}</td>
                                 <td>{{ $item->backfill_dalam }}</td>
                                 <td>{{ $item->backfill_stats }}</td>
